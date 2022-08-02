@@ -7,7 +7,7 @@ from common.constants import RETRY_COUNTS, RETRY_INTERVAL
 
 
 def _file(f):
-    return path.join(_base(), '../../{}'.format(f))
+    return path.join(_base(), f'../../{f}')
 
 
 def _base():
@@ -66,7 +66,7 @@ def backup_status(url, backupID, replicaAddress):
     output = ""
     cmd = [_bin(), '--url', url, '--debug', 'backup', 'status',
            backupID, '--replica', replicaAddress]
-    for x in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         backup = json.loads(subprocess.
                             check_output(cmd, encoding='utf-8').strip())
         assert 'state' in backup.keys()
@@ -105,7 +105,7 @@ def backup_create(url, snapshot, dest, labels=None,
     if labels is not None:
         for key in labels:
             cmd.append('--label')
-            cmd.append(key + '=' + labels[key])
+            cmd.append(f'{key}={labels[key]}')
 
     backup = json.loads(subprocess.check_output(cmd, encoding='utf-8').strip())
     assert "backupID" in backup.keys()
@@ -175,8 +175,7 @@ def restore_to_file(url, backup_url,
         cmd.append('--output-file')
         cmd.append(output_file)
     if format:
-        cmd.append('--output-format')
-        cmd.append(format)
+        cmd.extend(('--output-format', format))
     return subprocess.check_output(cmd, encoding='utf-8')
 
 

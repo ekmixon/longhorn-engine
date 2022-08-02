@@ -112,127 +112,91 @@ class ControllerServiceServicer(object):
   pass
 
   def VolumeGet(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def VolumeStart(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def VolumeShutdown(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def VolumeSnapshot(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def VolumeRevert(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def VolumeExpand(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def VolumeFrontendStart(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def VolumeFrontendShutdown(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def ReplicaList(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def ReplicaGet(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def ControllerReplicaCreate(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def ReplicaDelete(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def ReplicaUpdate(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def ReplicaPrepareRebuild(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def ReplicaVerifyRebuild(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def JournalList(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def VersionDetailGet(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def MetricGet(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')

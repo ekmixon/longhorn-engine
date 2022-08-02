@@ -9,7 +9,7 @@ class ReplicaClient(object):
     def __init__(self, address):
         self.address = address
         self.channel = grpc.insecure_channel(address)
-        self.url = "tcp://" + self.address
+        self.url = f"tcp://{self.address}"
         self.stub = replica_pb2_grpc.ReplicaServiceStub(self.channel)
 
     def replica_create(self, size):

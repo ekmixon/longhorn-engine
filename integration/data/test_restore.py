@@ -211,25 +211,26 @@ def restore_inc_test(
     wait_for_restore_completion(dr_address, backup0)
     verify_no_frontend_data(0, snap0_data, grpc_dr_controller)
 
-    data1 = \
-        snap0_data[0:offset1] + snap1_data + \
-        snap0_data[offset1+length1:]
+    data1 = (snap0_data[:offset1] + snap1_data + snap0_data[offset1+length1:])
     cmd.backup_restore(dr_address, backup1)
     wait_for_restore_completion(dr_address, backup1)
     verify_no_frontend_data(0, data1, grpc_dr_controller)
-    delta_file1 = "volume-delta-" + backup0_name + ".img"
+    delta_file1 = f"volume-delta-{backup0_name}.img"
     assert not path.exists(FIXED_REPLICA_PATH1 + delta_file1)
     assert not path.exists(FIXED_REPLICA_PATH2 + delta_file1)
     status = cmd.restore_status(dr_address)
     compare_last_restored_with_backup(status, backup1_name)
 
-    data2 = \
-        data1[0:offset2] + snap2_data + \
-        zero_string * (BLOCK_SIZE - length2 - offset2) + snap2_data
+    data2 = (
+        data1[:offset2]
+        + snap2_data
+        + zero_string * (BLOCK_SIZE - length2 - offset2)
+    ) + snap2_data
+
     cmd.backup_restore(dr_address, backup2)
     wait_for_restore_completion(dr_address, backup2)
     verify_no_frontend_data(0, data2, grpc_dr_controller)
-    delta_file2 = "volume-delta-" + backup1_name + ".img"
+    delta_file2 = f"volume-delta-{backup1_name}.img"
     assert not path.exists(FIXED_REPLICA_PATH1 + delta_file2)
     assert not path.exists(FIXED_REPLICA_PATH2 + delta_file2)
     status = cmd.restore_status(dr_address)
@@ -245,7 +246,7 @@ def restore_inc_test(
     cmd.backup_restore(dr_address, backup3)
     wait_for_restore_completion(dr_address, backup3)
     verify_no_frontend_data(0, data3, grpc_dr_controller)
-    delta_file3 = "volume-delta-" + backup3_name + ".img"
+    delta_file3 = f"volume-delta-{backup3_name}.img"
     assert not path.exists(FIXED_REPLICA_PATH1 + delta_file3)
     assert not path.exists(FIXED_REPLICA_PATH2 + delta_file3)
     status = cmd.restore_status(dr_address)
@@ -367,7 +368,7 @@ def test_inc_restore_with_rebuild_and_expansion(
     snaps_info = cmd.snapshot_info(dr_address)
     assert len(snaps_info) == 2
     volume_head_name = "volume-head"
-    snap_name = "expand-" + EXPANDED_SIZE_STR
+    snap_name = f"expand-{EXPANDED_SIZE_STR}"
     head_info = snaps_info[volume_head_name]
     assert head_info["name"] == volume_head_name
     assert head_info["parent"] == snap_name

@@ -36,7 +36,7 @@ thread_failed = False
 
 
 def _file(f):
-    return os.path.join(_base(), '../../{}'.format(f))
+    return os.path.join(_base(), f'../../{f}')
 
 
 def _base():
@@ -50,7 +50,7 @@ def cleanup_process(pm_client):
         except grpc.RpcError as e:
             if 'cannot find process' not in e.details():
                 raise e
-    for i in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         ps = pm_client.process_list()
         if len(ps) == 0:
             break
@@ -63,7 +63,7 @@ def cleanup_process(pm_client):
 
 def wait_for_process_running(client, name):
     healthy = False
-    for i in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         state = client.process_get(name).status.state
         if state == PROC_STATE_RUNNING:
             healthy = True
@@ -77,7 +77,7 @@ def wait_for_process_running(client, name):
 
 def wait_for_process_error(client, name):
     verified = False
-    for i in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         state = client.process_get(name).status.state
         if state == PROC_STATE_ERROR:
             verified = True
@@ -130,7 +130,7 @@ def create_engine_process(client, name=ENGINE_NAME,
 
 
 def get_process_address(p):
-    return "localhost:" + str(p.status.port_start)
+    return f"localhost:{str(p.status.port_start)}"
 
 
 def cleanup_controller(grpc_client):
@@ -221,9 +221,8 @@ def random_num():
 
 def create_backend_file():
     name = random_str()
-    fo = open(name, "w+")
-    fo.truncate(SIZE)
-    fo.close()
+    with open(name, "w+") as fo:
+        fo.truncate(SIZE)
     return os.path.abspath(name)
 
 
@@ -242,14 +241,11 @@ def get_expansion_snapshot_name():
 
 
 def get_replica_paths_from_snapshot_name(snap_name):
-    replica_paths = []
     cmd = ["find", "/tmp", "-name",
            '*volume-snap-{0}.img'.format(snap_name)]
     snap_paths = subprocess.check_output(cmd).split()
     assert snap_paths
-    for p in snap_paths:
-        replica_paths.append(os.path.dirname(p.decode('utf-8')))
-    return replica_paths
+    return [os.path.dirname(p.decode('utf-8')) for p in snap_paths]
 
 
 def get_snapshot_file_paths(replica_path, snap_name):
@@ -270,7 +266,7 @@ def get_filesystem_block_size(path="/tmp"):
 def wait_for_rebuild_complete(url):
     completed = 0
     rebuild_status = {}
-    for x in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         completed = 0
         rebuild_status = cmd.replica_rebuild_status(url)
         for rebuild in rebuild_status.values():
@@ -300,7 +296,7 @@ def wait_for_rebuild_complete(url):
 def wait_for_purge_completion(url):
     completed = 0
     purge_status = {}
-    for x in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         completed = 0
         purge_status = cmd.snapshot_purge_status(url)
         for status in purge_status.values():
@@ -320,7 +316,7 @@ def wait_for_purge_completion(url):
 def wait_for_restore_completion(url, backup_url):
     completed = 0
     rs = {}
-    for x in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         completed = 0
         rs = cmd.restore_status(url)
         for status in rs.values():
@@ -367,7 +363,7 @@ def verify_no_frontend_data(data_offset, data, grpc_c):
 
 
 def start_no_frontend_volume(grpc_c, *grpc_r_list):
-    assert len(grpc_r_list) > 0
+    assert grpc_r_list
 
     grpc_c.volume_frontend_start(FRONTEND_TGT_BLOCKDEV)
 
@@ -407,7 +403,7 @@ def cleanup_no_frontend_volume(grpc_c, *grpc_r_list):
 
 def reset_volume(grpc_c, *grpc_r_list):
     complete = True
-    for i in range(RETRY_COUNTS_SHORT):
+    for _ in range(RETRY_COUNTS_SHORT):
         complete = True
         cmd.sync_agent_server_reset(grpc_c.address)
         cleanup_controller(grpc_c)
@@ -481,7 +477,7 @@ def snapshot_revert_with_frontend(url, engine_name, name):
 def cleanup_replica_dir(dir=""):
     if dir and os.path.exists(dir):
         try:
-            cmd = ['rm', '-r', dir + "*"]
+            cmd = ['rm', '-r', f"{dir}*"]
             subprocess.check_call(cmd)
         except Exception:
             pass
@@ -508,7 +504,7 @@ def open_replica(grpc_client, backing_file=None):
 
 def get_blockdev(volume):
     dev = blockdev(volume)
-    for i in range(10):
+    for _ in range(10):
         if not dev.ready():
             time.sleep(1)
     assert dev.ready()
@@ -524,8 +520,7 @@ def read_dev(dev, offset, length):
 
 
 def random_string(length):
-    return \
-        ''.join(random.choice(string.ascii_lowercase) for x in range(length))
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
 
 
 def verify_data(dev, offset, data):
@@ -543,7 +538,7 @@ def prepare_backup_dir(backup_dir):
 
 
 def get_backup_volume_url(backup_target, volume_name):
-    return backup_target + "?volume=" + volume_name
+    return f"{backup_target}?volume={volume_name}"
 
 
 def read_from_backing_file(offset, length):
@@ -565,17 +560,17 @@ def data_verifier(dev, times, offset, length):
 
 
 def verify_loop(dev, times, offset, length):
-    for i in range(times):
+    for _ in range(times):
         data = random_string(length)
         verify_data(dev, offset, data)
 
 
 def verify_replica_state(grpc_c, addr, state):
     if not addr.startswith("tcp://"):
-        addr = "tcp://" + addr
+        addr = f"tcp://{addr}"
 
     verified = False
-    for i in range(RETRY_COUNTS_SHORT):
+    for _ in range(RETRY_COUNTS_SHORT):
         replicas = grpc_c.replica_list()
         assert len(replicas) == 2
         for r in replicas:
@@ -591,10 +586,10 @@ def verify_replica_state(grpc_c, addr, state):
 
 def verify_replica_mode(grpc_c, addr, mode):
     if not addr.startswith("tcp://"):
-        addr = "tcp://" + addr
+        addr = f"tcp://{addr}"
 
     verified = False
-    for i in range(RETRY_COUNTS_SHORT):
+    for _ in range(RETRY_COUNTS_SHORT):
         replicas = grpc_c.replica_list()
         snapList = cmd.snapshot_ls(grpc_c.address)
         for r in replicas:
@@ -609,7 +604,7 @@ def verify_replica_mode(grpc_c, addr, mode):
 
 
 def verify_read(dev, offset, data):
-    for i in range(10):
+    for _ in range(10):
         readed = read_dev(dev, offset, len(data))
         assert data == readed
 
@@ -645,7 +640,7 @@ def get_dev(grpc_replica1, grpc_replica2, grpc_controller,
 
 def random_offset(size, existings={}):
     assert size < PAGE_SIZE
-    for i in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         offset = 0
         if int(SIZE) != size:
             offset = random.randrange(0, int(SIZE) - size, PAGE_SIZE)
@@ -718,7 +713,7 @@ def expand_volume_with_frontend(grpc_controller_client, size):  # NOQA
 
 
 def wait_for_volume_expansion(grpc_controller_client, size):  # NOQA
-    for i in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         volume = grpc_controller_client.volume_get()
         if not volume.isExpanding and volume.size == size:
             break
@@ -754,7 +749,7 @@ def delete_process(client, name):
 
 def wait_for_process_deletion(client, name):
     deleted = False
-    for i in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         rs = client.process_list()
         if name not in rs:
             deleted = True
@@ -765,7 +760,7 @@ def wait_for_process_deletion(client, name):
 
 def check_dev_existence(volume_name):
     found = False
-    for i in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         if os.path.exists(get_dev_path(volume_name)):
             found = True
             break
@@ -775,7 +770,7 @@ def check_dev_existence(volume_name):
 
 def wait_for_dev_deletion(volume_name):
     found = True
-    for i in range(RETRY_COUNTS):
+    for _ in range(RETRY_COUNTS):
         if not os.path.exists(get_dev_path(volume_name)):
             found = False
             break

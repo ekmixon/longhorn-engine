@@ -305,10 +305,12 @@ def volume_expansion_with_snapshots_test(dev, grpc_controller,  # NOQA
         grpc_controller, EXPANDED_SIZE)
 
     snap1.verify_data()
-    assert \
-        dev.readat(0, SIZE) == \
-        original_data[0:data1.offset] + data1.content + \
-        original_data[data1.offset+data1.length:]
+    assert dev.readat(0, SIZE) == (
+        original_data[: data1.offset]
+        + data1.content
+        + original_data[data1.offset + data1.length :]
+    )
+
     assert dev.readat(SIZE, SIZE) == zero_char*SIZE
 
     # write the data to both the original part and the expanded part
@@ -336,10 +338,12 @@ def volume_expansion_with_snapshots_test(dev, grpc_controller,  # NOQA
     # revert to snap1 then see if we can still r/w the existing data
     # and expanded part
     snapshot_revert_with_frontend(address, engine_name, snap1.name)
-    assert \
-        dev.readat(0, SIZE) == \
-        original_data[0:data1.offset] + data1.content + \
-        original_data[data1.offset+data1.length:]
+    assert dev.readat(0, SIZE) == (
+        original_data[: data1.offset]
+        + data1.content
+        + original_data[data1.offset + data1.length :]
+    )
+
     assert dev.readat(SIZE, SIZE) == zero_char*SIZE
 
     data5_len = random_length(PAGE_SIZE)
@@ -355,10 +359,12 @@ def volume_expansion_with_snapshots_test(dev, grpc_controller,  # NOQA
     cmd.snapshot_rm(address, snap1.name)
     cmd.snapshot_purge(address)
     wait_for_purge_completion(address)
-    assert \
-        dev.readat(0, SIZE) == \
-        original_data[0:data1.offset] + data1.content + \
-        original_data[data1.offset+data1.length:]
+    assert dev.readat(0, SIZE) == (
+        original_data[: data1.offset]
+        + data1.content
+        + original_data[data1.offset + data1.length :]
+    )
+
     assert \
         dev.readat(SIZE, SIZE) == zero_char*(data5.offset-SIZE) + \
         data5.content + zero_char*(EXPANDED_SIZE-data5.offset-data5.length)
@@ -412,12 +418,12 @@ def test_snapshot_mounted_filesystem(grpc_controller,  # NOQA
 
 def snapshot_mounted_filesystem_test(volume_name, dev, address, engine_name):  # NOQA
     dev_path = dev.dev
-    mnt_path = "/tmp/mnt-" + volume_name
-    test_file = mnt_path + "/test"
+    mnt_path = f"/tmp/mnt-{volume_name}"
+    test_file = f"{mnt_path}/test"
     length = 128
 
-    print("dev_path: " + dev_path + "\n")
-    print("mnt_path: " + mnt_path + "\n")
+    print(f"dev_path: {dev_path}" + "\n")
+    print(f"mnt_path: {mnt_path}" + "\n")
 
     # create & mount a ext4 filesystem on dev
     nsenter_cmd = ["nsenter", "--mount=/host/proc/1/ns/mnt",

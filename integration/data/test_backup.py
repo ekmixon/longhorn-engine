@@ -230,12 +230,10 @@ def snapshot_tree_backup_test(backup_target, engine_name,  # NOQA
                   grpc_controller)
     offset = 0
     length = 128
-    backup = {}
-
     snap, data = snapshot_tree_build(dev, address, engine_name,
                                      offset, length)
 
-    backup["0b"] = create_backup(address, snap["0b"], backup_target)["URL"]
+    backup = {"0b": create_backup(address, snap["0b"], backup_target)["URL"]}
     backup["0c"] = create_backup(address, snap["0c"], backup_target)["URL"]
     backup["1c"] = create_backup(address, snap["1c"], backup_target)["URL"]
     backup["2b"] = create_backup(address, snap["2b"], backup_target)["URL"]
@@ -356,15 +354,15 @@ def test_backup_S3_latest_unavailable(grpc_replica1, grpc_replica2,  # NOQA
 
 def test_backup_incremental_logic(grpc_replica1, grpc_replica2,
                                   grpc_controller, backup_targets):  # NOQA
+    offset = 0
+    length = 128
+
     for backup_target in backup_targets:
         dev = get_dev(grpc_replica1, grpc_replica2,
                       grpc_controller)
         address = grpc_controller.address
         volume_name = VOLUME_NAME
         engine_name = ENGINE_NAME
-        offset = 0
-        length = 128
-
         # initial backup
         snap1_data = random_string(length)
         verify_data(dev, offset, snap1_data)
@@ -374,7 +372,7 @@ def test_backup_incremental_logic(grpc_replica1, grpc_replica2,
         assert backup1_info["IsIncremental"] is False
 
         # delta backup on top of initial backup
-        snap2_data = random_string(int(length / 2))
+        snap2_data = random_string(length // 2)
         verify_data(dev, offset, snap2_data)
         snap2 = cmd.snapshot_create(address)
         backup2_info = create_backup(address, snap2, backup_target)
@@ -398,8 +396,8 @@ def test_backup_incremental_logic(grpc_replica1, grpc_replica2,
         assert backup3_info["IsIncremental"] is False
 
         # write half of snap1 onto head
-        snap4_data = snap1_data[:int(length / 2)]
-        assert len(snap4_data) == int(length / 2)
+        snap4_data = snap1_data[:length // 2]
+        assert len(snap4_data) == length // 2
         verify_data(dev, offset, snap4_data)
         snap4_checksum = checksum_dev(dev)
         assert snap4_checksum != snap1_checksum
@@ -425,8 +423,8 @@ def test_backup_incremental_logic(grpc_replica1, grpc_replica2,
         assert checksum_dev(dev) == snap4_checksum
         assert snap4_checksum != snap1_checksum
         data = read_dev(dev, offset, length)
-        assert data[:int(length / 2)] == snap4_data
-        assert data[int(length / 2):] == '\x00' * int(length / 2)
+        assert data[:length // 2] == snap4_data
+        assert data[length // 2:] == '\x00' * (length // 2)
 
         rm_backups(address, engine_name, [backup1_info["URL"],
                                           backup2_info["URL"],
@@ -594,12 +592,11 @@ def create_in_progress_backup_file(volume):
     assert os.path.exists(volume_dir)
     backup_cfg_dir = os.path.join(volume_dir, "backups")
 
-    name = "backup-" + random_string(16)
-    backup_cfg_path = os.path.join(backup_cfg_dir, "backup_" + name + ".cfg")
+    name = f"backup-{random_string(16)}"
+    backup_cfg_path = os.path.join(backup_cfg_dir, f"backup_{name}.cfg")
     cfg = json.dumps({"Name": name, "VolumeName": volume, "CreatedTime": ""})
-    file = open(backup_cfg_path, "w")
-    file.write(cfg)
-    file.close()
+    with open(backup_cfg_path, "w") as file:
+        file.write(cfg)
     return backup_cfg_path
 
 
@@ -697,10 +694,9 @@ def test_backup_corrupt_deletion(grpc_replica1, grpc_replica2,  # NOQA
 
         # corrupt backup1 config
         cfg = findfile(BACKUP_DIR, "backup_" + backup1["Name"] + ".cfg")
-        corrupt_backup = open(cfg, "w")
-        assert corrupt_backup
-        assert corrupt_backup.write("{corrupt: definitely") > 0
-        corrupt_backup.close()
+        with open(cfg, "w") as corrupt_backup:
+            assert corrupt_backup
+            assert corrupt_backup.write("{corrupt: definitely") > 0
         cmd.backup_rm(address, backup1["URL"])
 
         # check that the volume now has 2 blocks
@@ -757,7 +753,7 @@ def test_backup_volume_deletion(grpc_replica1, grpc_replica2,  # NOQA
 
 def test_backup_volume_list(grpc_replica_client, grpc_controller_client,  # NOQA
                             grpc_replica1, grpc_replica2,  # NOQA
-                            grpc_controller, backup_targets):  # NOQA
+                            grpc_controller, backup_targets):    # NOQA
     """
     Test backup volume list
 
@@ -785,8 +781,8 @@ def test_backup_volume_list(grpc_replica_client, grpc_controller_client,  # NOQA
     """
 
     # create a second volume
-    grpc2_replica1 = grpc_replica_client(REPLICA_2_NAME + "-1")
-    grpc2_replica2 = grpc_replica_client(REPLICA_2_NAME + "-2")
+    grpc2_replica1 = grpc_replica_client(f"{REPLICA_2_NAME}-1")
+    grpc2_replica2 = grpc_replica_client(f"{REPLICA_2_NAME}-2")
     grpc2_controller = grpc_controller_client(ENGINE2_NAME, VOLUME2_NAME)
 
     offset = 0
@@ -873,7 +869,7 @@ def test_backup_volume_list(grpc_replica_client, grpc_controller_client,  # NOQA
 
 
 def test_backup_lock(grpc_replica1, grpc_replica2,  # NOQA
-                            grpc_controller, backup_targets):  # NOQA
+                            grpc_controller, backup_targets):    # NOQA
     """
     Test backup locks
 
@@ -910,15 +906,15 @@ def test_backup_lock(grpc_replica1, grpc_replica2,  # NOQA
     20. verify backup(1) deletion completed
     21. cleanup
     """
+    offset = 0
+    length = 128
+
     for backup_target in backup_targets:
         dev = get_dev(grpc_replica1, grpc_replica2,
                       grpc_controller)
 
         # create a regular backup
         address = grpc_controller.address
-        offset = 0
-        length = 128
-
         snap1_data = random_string(length)
         verify_data(dev, offset, snap1_data)
         snap1_checksum = checksum_dev(dev)
@@ -970,7 +966,7 @@ def test_backup_lock(grpc_replica1, grpc_replica2,  # NOQA
 
 def remove_lock_file(name):
     locks_dir = os.path.join(finddir(BACKUP_DIR, VOLUME_NAME), "locks")
-    lock = os.path.join(locks_dir, name + ".lck")
+    lock = os.path.join(locks_dir, f"{name}.lck")
     os.remove(lock)
 
 
@@ -991,16 +987,30 @@ def create_delete_lock(acquired):
 
 def create_lock_file(name, data):
     locks_dir = os.path.join(finddir(BACKUP_DIR, VOLUME_NAME), "locks")
-    tmp = os.path.join(locks_dir, name + ".lck" + ".tmp")
+    tmp = os.path.join(locks_dir, f"{name}.lck.tmp")
     os.makedirs(locks_dir, exist_ok=True)
-    cfg = open(tmp, "w")
-    cfg.write(data)
-    cfg.close()
-    os.rename(tmp, os.path.join(locks_dir, name + ".lck"))
+    with open(tmp, "w") as cfg:
+        cfg.write(data)
+    os.rename(tmp, os.path.join(locks_dir, f"{name}.lck"))
 
 
 def test_backup_type(grpc_replica1, grpc_replica2,      # NOQA
                      grpc_controller, backup_targets):  # NOQA
+    # backup0: 256 random data in 1st block
+    length0 = 256
+    # backup1: 32 random data + 32 zero data + 192 random data in 1st block
+    length1 = 32
+    offset1 = 32
+    # backup2: 32 random data + 256 random data in 1st block,
+    #          256 random data in 2nd block
+    length2 = 256
+    offset2 = 32
+    # backup3: 64 zero data + 192 random data in 1st block
+    length3 = 64
+    offset3 = 0
+    # backup4: 256 random data in 1st block
+    length4 = 256
+    offset4 = 0
     for backup_target in backup_targets:
         address = grpc_controller.address
         block_size = 2 * 1024 * 1024
@@ -1009,8 +1019,6 @@ def test_backup_type(grpc_replica1, grpc_replica2,      # NOQA
 
         zero_string = b'\x00'.decode('utf-8')
 
-        # backup0: 256 random data in 1st block
-        length0 = 256
         snap0_data = random_string(length0)
         verify_data(dev, 0, snap0_data)
         verify_data(dev, block_size, snap0_data)
@@ -1019,9 +1027,6 @@ def test_backup_type(grpc_replica1, grpc_replica2,      # NOQA
         backup0_url = backup0["URL"]
         assert backup0['IsIncremental'] is False
 
-        # backup1: 32 random data + 32 zero data + 192 random data in 1st block
-        length1 = 32
-        offset1 = 32
         snap1_data = zero_string * length1
         verify_data(dev, offset1, snap1_data)
         snap1 = cmd.snapshot_create(address)
@@ -1029,10 +1034,6 @@ def test_backup_type(grpc_replica1, grpc_replica2,      # NOQA
         backup1_url = backup1["URL"]
         assert backup1['IsIncremental'] is True
 
-        # backup2: 32 random data + 256 random data in 1st block,
-        #          256 random data in 2nd block
-        length2 = 256
-        offset2 = 32
         snap2_data = random_string(length2)
         verify_data(dev, offset2, snap2_data)
         verify_data(dev, block_size, snap2_data)
@@ -1043,9 +1044,6 @@ def test_backup_type(grpc_replica1, grpc_replica2,      # NOQA
 
         rm_backups(address, ENGINE_NAME, [backup2_url])
 
-        # backup3: 64 zero data + 192 random data in 1st block
-        length3 = 64
-        offset3 = 0
         verify_data(dev, offset3, zero_string * length3)
         verify_data(dev, length2, zero_string * offset2)
         verify_data(dev, block_size, zero_string * length2)
@@ -1059,9 +1057,6 @@ def test_backup_type(grpc_replica1, grpc_replica2,      # NOQA
         backup3_url = backup3["URL"]
         assert backup3['IsIncremental'] is False
 
-        # backup4: 256 random data in 1st block
-        length4 = 256
-        offset4 = 0
         snap4_data = random_string(length4)
         verify_data(dev, offset4, snap4_data)
         snap4 = cmd.snapshot_create(address)

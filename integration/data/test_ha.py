@@ -485,10 +485,12 @@ def test_expansion_with_rebuild(grpc_controller,  # NOQA
         grpc_controller, EXPANDED_SIZE)
 
     snap1.verify_data()
-    assert \
-        dev.readat(0, SIZE) == \
-        original_data[0:data1.offset] + data1.content + \
-        original_data[data1.offset+data1.length:]
+    assert dev.readat(0, SIZE) == (
+        original_data[: data1.offset]
+        + data1.content
+        + original_data[data1.offset + data1.length :]
+    )
+
     assert dev.readat(SIZE, SIZE) == zero_char*SIZE
 
     # write the data to both the original part and the expanded part
@@ -527,12 +529,18 @@ def test_expansion_with_rebuild(grpc_controller,  # NOQA
                          grpc_replica1.address, "ERR")
     grpc_controller.replica_delete(replicas[0].address)
 
-    assert \
-        dev.readat(0, SIZE) == \
-        original_data[0:data1.offset] + data1.content + \
-        original_data[data1.offset+data1.length:data2.offset] + \
-        data2.content + \
-        original_data[data2.offset+data2.length:]
+    assert dev.readat(0, SIZE) == (
+        (
+            (
+                original_data[: data1.offset]
+                + data1.content
+                + original_data[data1.offset + data1.length : data2.offset]
+            )
+            + data2.content
+        )
+        + original_data[data2.offset + data2.length :]
+    )
+
     assert \
         dev.readat(SIZE, SIZE) == zero_char*(data3.offset-SIZE) + \
         data3.content + zero_char*(EXPANDED_SIZE-data3.offset-data3.length)
@@ -545,7 +553,7 @@ def test_expansion_with_rebuild(grpc_controller,  # NOQA
 
 
 def test_expansion_rollback_with_rebuild(
-        grpc_controller, grpc_fixed_dir_replica1, grpc_fixed_dir_replica2):  # NOQA
+        grpc_controller, grpc_fixed_dir_replica1, grpc_fixed_dir_replica2):    # NOQA
     """
     The test flow:
     1. Write random data into the block device.
@@ -683,12 +691,18 @@ def test_expansion_rollback_with_rebuild(
     verify_replica_state(grpc_controller, r1_url, "ERR")
     grpc_controller.replica_delete(replicas[0].address)
 
-    assert \
-        dev.readat(0, SIZE) == \
-        original_data[0:data1.offset] + data1.content + \
-        original_data[data1.offset+data1.length:data2.offset] + \
-        data2.content + \
-        original_data[data2.offset+data2.length:]
+    assert dev.readat(0, SIZE) == (
+        (
+            (
+                original_data[: data1.offset]
+                + data1.content
+                + original_data[data1.offset + data1.length : data2.offset]
+            )
+            + data2.content
+        )
+        + original_data[data2.offset + data2.length :]
+    )
+
     assert \
         dev.readat(SIZE, SIZE) == zero_char*(data3.offset-SIZE) + \
         data3.content + zero_char*(EXPANDED_SIZE-data3.offset-data3.length)

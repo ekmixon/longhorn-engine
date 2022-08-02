@@ -55,7 +55,7 @@ def writeat_direct(dev, offset, data):
 
 
 def get_socket_path(volume):
-    return path.join(LONGHORN_SOCKET_DIR, "longhorn-" + volume + ".sock")
+    return path.join(LONGHORN_SOCKET_DIR, f"longhorn-{volume}.sock")
 
 
 def get_block_device_path(volume):
@@ -83,6 +83,4 @@ class blockdev:
         if not os.path.exists(self.dev):
             return False
         mode = os.stat(self.dev).st_mode
-        if not stat.S_ISBLK(mode):
-            return False
-        return True
+        return bool(stat.S_ISBLK(mode))

@@ -79,7 +79,7 @@ def random_num():
 
 
 def _file(f):
-    return os.path.join(_base(), '../../{}'.format(f))
+    return os.path.join(_base(), f'../../{f}')
 
 
 def _base():
@@ -201,7 +201,7 @@ def test_replica_add_rebuild(bin, grpc_controller_client,  # NOQA
     volumehead = "volume-head"
     assert len(info) == 4
     for name in info:
-        if name != snap0 and name != snap1 and name != volumehead:
+        if name not in [snap0, snap1, volumehead]:
             snapreb = name
             break
 
@@ -300,7 +300,7 @@ def test_replica_failure_detection(grpc_controller_client,  # NOQA
     cleanup_replica(grpc_replica_client)
 
     detected = False
-    for i in range(10):
+    for _ in range(10):
         replicas = grpc_controller_client.replica_list()
         assert len(replicas) == 2
         for r in replicas:
@@ -485,7 +485,7 @@ def test_snapshot_create(bin, grpc_controller_client,  # NOQA
            'snapshot', 'create']
     snap0 = subprocess.check_output(cmd, encoding='utf-8').strip()
     expected = grpc_replica_client.replica_get().chain[1]
-    assert expected == 'volume-snap-{}.img'.format(snap0)
+    assert expected == f'volume-snap-{snap0}.img'
 
     cmd = [bin, '--url', grpc_controller_client.address,
            'snapshot', 'create',
@@ -541,7 +541,7 @@ def test_snapshot_rm(bin, grpc_controller_client,  # NOQA
     chain = grpc_replica_client.replica_get().chain
     assert len(chain) == 3
     assert chain[0] == 'volume-head-002.img'
-    assert chain[1] == 'volume-snap-{}.img'.format(output)
+    assert chain[1] == f'volume-snap-{output}.img'
 
     cmd = [bin, '--url', grpc_controller_client.address,
            'snapshot', 'rm', output]
@@ -575,15 +575,15 @@ def test_snapshot_rm_empty(bin, grpc_controller_client,  # NOQA
     chain = grpc_replica_client.replica_get().chain
     assert len(chain) == 2
     assert chain[0] == 'volume-head-001.img'
-    assert chain[1] == 'volume-snap-{}.img'.format(output1)
+    assert chain[1] == f'volume-snap-{output1}.img'
 
     # second snapshot
     output2 = subprocess.check_output(cmd, encoding='utf-8').strip()
     chain = grpc_replica_client.replica_get().chain
     assert len(chain) == 3
     assert chain[0] == 'volume-head-002.img'
-    assert chain[1] == 'volume-snap-{}.img'.format(output2)
-    assert chain[2] == 'volume-snap-{}.img'.format(output1)
+    assert chain[1] == f'volume-snap-{output2}.img'
+    assert chain[2] == f'volume-snap-{output1}.img'
 
     # remove the first snapshot(empty), it will fold second snapshot(empty)
     # to the first snapshot(empty) and rename it to second snapshot
@@ -620,12 +620,12 @@ def test_snapshot_last(bin, grpc_controller_client,  # NOQA
     chain = grpc_replica_client.replica_get().chain
     assert len(chain) == 2
     assert chain[0] == 'volume-head-001.img'
-    assert chain[1] == 'volume-snap-{}.img'.format(output)
+    assert chain[1] == f'volume-snap-{output}.img'
 
     chain = grpc_replica_client2.replica_get().chain
     assert len(chain) == 2
     assert chain[0] == 'volume-head-001.img'
-    assert chain[1] == 'volume-snap-{}.img'.format(output)
+    assert chain[1] == f'volume-snap-{output}.img'
 
     # it will be marked as removed
     cmd = [bin, '--url', grpc_controller_client.address,
@@ -654,7 +654,7 @@ def backup_core(bin, engine_manager_client,  # NOQA
     # create & process backup1
     snapshot1 = cmd.snapshot_create(grpc_controller_client.address)
     output = grpc_replica_client.replica_get().chain[1]
-    assert output == 'volume-snap-{}.img'.format(snapshot1)
+    assert output == f'volume-snap-{snapshot1}.img'
 
     backup1 = cmd.backup_create(grpc_controller_client.address,
                                 snapshot1, backup_target,
@@ -672,7 +672,7 @@ def backup_core(bin, engine_manager_client,  # NOQA
     # create & process backup2
     snapshot2 = cmd.snapshot_create(grpc_controller_client.address)
     output = grpc_replica_client.replica_get().chain[1]
-    assert output == 'volume-snap-{}.img'.format(snapshot2)
+    assert output == f'volume-snap-{snapshot2}.img'
 
     backup2 = cmd.backup_create(grpc_controller_client.address,
                                 snapshot2, backup_target)
@@ -718,11 +718,9 @@ def backup_core(bin, engine_manager_client,  # NOQA
     os.rename(backup_cfg_path, backup_tmp_cfg_path)
     assert os.path.exists(backup_tmp_cfg_path)
 
-    corrupt_backup = open(backup_cfg_path, "w")
-    assert corrupt_backup
-    assert corrupt_backup.write("{corrupt: definitely") > 0
-    corrupt_backup.close()
-
+    with open(backup_cfg_path, "w") as corrupt_backup:
+        assert corrupt_backup
+        assert corrupt_backup.write("{corrupt: definitely") > 0
     # request the new backup list
     volume_info = cmd.backup_volume_list(
         grpc_controller_client.address,
@@ -773,7 +771,7 @@ def backup_core(bin, engine_manager_client,  # NOQA
 
     # backup doesn't exists so it should error
     with pytest.raises(subprocess.CalledProcessError):
-        url = backup_target + "?backup=backup-unk" + "&volume=" + VOLUME_NAME
+        url = f"{backup_target}?backup=backup-unk&volume={VOLUME_NAME}"
         cmd.backup_inspect(grpc_controller_client.address, url)
 
     # this returns unsupported driver since `bad` is not a known scheme
@@ -819,8 +817,8 @@ def test_snapshot_purge_basic(bin, grpc_controller_client,  # NOQA
     chain = grpc_replica_client.replica_get().chain
     assert len(chain) == 3
     assert chain[0] == 'volume-head-002.img'
-    assert chain[1] == 'volume-snap-{}.img'.format(snap1)
-    assert chain[2] == 'volume-snap-{}.img'.format(snap0)
+    assert chain[1] == f'volume-snap-{snap1}.img'
+    assert chain[2] == f'volume-snap-{snap0}.img'
 
     cmd = [bin, '--url', grpc_controller_client.address,
            'snapshot', 'rm', snap0]
@@ -881,8 +879,8 @@ def test_snapshot_purge_head_parent(bin, grpc_controller_client,  # NOQA
     chain = grpc_replica_client.replica_get().chain
     assert len(chain) == 3
     assert chain[0] == 'volume-head-002.img'
-    assert chain[1] == 'volume-snap-{}.img'.format(snap1)
-    assert chain[2] == 'volume-snap-{}.img'.format(snap0)
+    assert chain[1] == f'volume-snap-{snap1}.img'
+    assert chain[2] == f'volume-snap-{snap0}.img'
 
     cmd = [bin, '--url', grpc_controller_client.address,
            'snapshot', 'rm', snap1]
@@ -955,7 +953,7 @@ def test_volume_expand_with_snapshots(  # NOQA
            'snapshot', 'create']
     snap0 = subprocess.check_output(cmd, encoding='utf-8').strip()
     expected = grpc_replica_client.replica_get().chain[1]
-    assert expected == 'volume-snap-{}.img'.format(snap0)
+    assert expected == f'volume-snap-{snap0}.img'
 
     cmd = [bin, '--url', grpc_controller_client.address,
            'snapshot', 'create',
@@ -970,10 +968,10 @@ def test_volume_expand_with_snapshots(  # NOQA
     # on the new head file
     snap_expansion = get_expansion_snapshot_name()
     r1 = grpc_replica_client.replica_get()
-    assert r1.chain[1] == 'volume-snap-{}.img'.format(snap_expansion)
+    assert r1.chain[1] == f'volume-snap-{snap_expansion}.img'
     assert r1.size == EXPANDED_SIZE_STR
     r2 = grpc_replica_client2.replica_get()
-    assert r2.chain[1] == 'volume-snap-{}.img'.format(snap_expansion)
+    assert r2.chain[1] == f'volume-snap-{snap_expansion}.img'
     assert r2.size == EXPANDED_SIZE_STR
 
     replica_paths = get_replica_paths_from_snapshot_name(snap_expansion)
@@ -1104,15 +1102,15 @@ def test_volume_expand_with_snapshots(  # NOQA
         assert os.path.getsize(head_path) == EXPANDED_SIZE
 
     r1 = grpc_replica_client.replica_get()
-    assert r1.chain[1] == 'volume-snap-{}.img'.format(snap2)
+    assert r1.chain[1] == f'volume-snap-{snap2}.img'
     assert r1.size == EXPANDED_SIZE_STR
     r2 = grpc_replica_client2.replica_get()
-    assert r2.chain[1] == 'volume-snap-{}.img'.format(snap2)
+    assert r2.chain[1] == f'volume-snap-{snap2}.img'
     assert r2.size == EXPANDED_SIZE_STR
 
 
 def test_expand_multiple_times():
-    for i in range(30):
+    for _ in range(30):
         em_client = ProcessManagerClient(INSTANCE_MANAGER_ENGINE)
         engine_process = create_engine_process(em_client)
         grpc_controller_client = ControllerClient(
@@ -1140,7 +1138,7 @@ def test_expand_multiple_times():
         cleanup_process(rm_client)
 
 
-def test_single_replica_failure_during_engine_start(bin):  # NOQA
+def test_single_replica_failure_during_engine_start(bin):    # NOQA
     """
     Test if engine still works fine if there is an invalid
     replica/backend in the starting phase
@@ -1194,7 +1192,7 @@ def test_single_replica_failure_during_engine_start(bin):  # NOQA
            'snapshot', 'create']
     snap0 = subprocess.check_output(cmd, encoding='utf-8').strip()
     expected = grpc_replica_client1.replica_get().chain[1]
-    assert expected == 'volume-snap-{}.img'.format(snap0)
+    assert expected == f'volume-snap-{snap0}.img'
 
     cmd = [bin, '--url', grpc_controller_client.address,
            'snapshot', 'create',
@@ -1202,8 +1200,10 @@ def test_single_replica_failure_during_engine_start(bin):  # NOQA
     snap1 = subprocess.check_output(cmd, encoding='utf-8').strip()
 
     # Mess up the replica1 by manually modifying the snapshot meta file
-    r1_snap1_meta_path = os.path.join(replica_dir1,
-                                      'volume-snap-{}.img.meta'.format(snap1))
+    r1_snap1_meta_path = os.path.join(
+        replica_dir1, f'volume-snap-{snap1}.img.meta'
+    )
+
     with open(r1_snap1_meta_path, 'r') as f:
         snap1_meta_info = json.load(f)
     with open(r1_snap1_meta_path, 'w') as f:
@@ -1289,7 +1289,7 @@ def test_single_replica_failure_during_engine_start(bin):  # NOQA
     cleanup_process(rm_client)
 
 
-def test_engine_restart_after_sigkill(bin):  # NOQA
+def test_engine_restart_after_sigkill(bin):    # NOQA
     """
     Test if engine can be restarted after crashing by SIGKILL.
 
@@ -1339,7 +1339,7 @@ def test_engine_restart_after_sigkill(bin):  # NOQA
            'snapshot', 'create']
     snap0 = subprocess.check_output(cmd, encoding='utf-8').strip()
     expected = grpc_replica_client1.replica_get().chain[1]
-    assert expected == 'volume-snap-{}.img'.format(snap0)
+    assert expected == f'volume-snap-{snap0}.img'
 
     cmd = [bin, '--url', grpc_controller_client.address,
            'snapshot', 'create',
@@ -1407,7 +1407,7 @@ def test_engine_restart_after_sigkill(bin):  # NOQA
     cleanup_process(rm_client)
 
 
-def test_replica_removal_and_recreation(bin):  # NOQA
+def test_replica_removal_and_recreation(bin):    # NOQA
     """
     Test if engine can be remove and recreate a replica.
 
@@ -1452,15 +1452,13 @@ def test_replica_removal_and_recreation(bin):  # NOQA
     # Remove the first replica and recreate it immediately.
     grpc_controller_client.replica_delete(r1_url)
 
-    for i in range(RETRY_COUNTS_SHORT):
+    for _ in range(RETRY_COUNTS_SHORT):
         try:
             grpc_controller_client.replica_create(r1_url, True, "RW")
         except grpc.RpcError as grpc_error:
             assert "replica must be closed" in grpc_error.details()
             continue
         break
-        time.sleep(RETRY_INTERVAL_SHORT)
-
     # If the issue in #1628 occurs the mode will be ERR.
     verify_replica_mode(grpc_controller_client, r1_url, "RW")
 

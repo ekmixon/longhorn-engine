@@ -3,7 +3,7 @@ import hashlib
 
 
 def file(f):
-    return os.path.join(_base(), '../../{}'.format(f))
+    return os.path.join(_base(), f'../../{f}')
 
 
 def _base():
@@ -28,10 +28,9 @@ def finddir(start, name):
 
 def read_file(file_path, offset, length):
     assert os.path.exists(file_path)
-    f = open(file_path, 'r')
-    f.seek(offset)
-    data = f.read(length)
-    f.close()
+    with open(file_path, 'r') as f:
+        f.seek(offset)
+        data = f.read(length)
     return data
 
 

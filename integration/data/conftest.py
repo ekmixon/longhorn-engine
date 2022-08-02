@@ -101,48 +101,72 @@ def grpc_backing_controller(request, grpc_controller_client):
 
 @pytest.fixture
 def grpc_replica1(request, grpc_replica_client):
-    return grpc_replica_client(REPLICA_NAME + "-1")
+    return grpc_replica_client(f"{REPLICA_NAME}-1")
 
 
 @pytest.fixture
 def grpc_replica2(request, grpc_replica_client):
-    return grpc_replica_client(REPLICA_NAME + "-2")
+    return grpc_replica_client(f"{REPLICA_NAME}-2")
 
 
 @pytest.fixture
 def grpc_backing_qcow2_replica1(request, grpc_replica_client):
     return grpc_replica_client(
-        REPLICA_NAME + "-backing-qcow2-1",
-        args=["replica", tempfile.mkdtemp(),
-              "--backing-file", BACKING_FILE_QCOW2_PATH1,
-              "--size", str(SIZE)])
+        f"{REPLICA_NAME}-backing-qcow2-1",
+        args=[
+            "replica",
+            tempfile.mkdtemp(),
+            "--backing-file",
+            BACKING_FILE_QCOW2_PATH1,
+            "--size",
+            str(SIZE),
+        ],
+    )
 
 
 @pytest.fixture
 def grpc_backing_qcow2_replica2(request, grpc_replica_client):
     return grpc_replica_client(
-        REPLICA_NAME + "-backing-qcow2-2",
-        args=["replica", tempfile.mkdtemp(),
-              "--backing-file", BACKING_FILE_QCOW2_PATH2,
-              "--size", str(SIZE)])
+        f"{REPLICA_NAME}-backing-qcow2-2",
+        args=[
+            "replica",
+            tempfile.mkdtemp(),
+            "--backing-file",
+            BACKING_FILE_QCOW2_PATH2,
+            "--size",
+            str(SIZE),
+        ],
+    )
 
 
 @pytest.fixture
 def grpc_backing_raw_replica1(request, grpc_replica_client):
     return grpc_replica_client(
-        REPLICA_NAME + "-backing-raw-1",
-        args=["replica", tempfile.mkdtemp(),
-              "--backing-file", BACKING_FILE_RAW_PATH1,
-              "--size", str(SIZE)])
+        f"{REPLICA_NAME}-backing-raw-1",
+        args=[
+            "replica",
+            tempfile.mkdtemp(),
+            "--backing-file",
+            BACKING_FILE_RAW_PATH1,
+            "--size",
+            str(SIZE),
+        ],
+    )
 
 
 @pytest.fixture
 def grpc_backing_raw_replica2(request, grpc_replica_client):
     return grpc_replica_client(
-        REPLICA_NAME + "-backing-raw-2",
-        args=["replica", tempfile.mkdtemp(),
-              "--backing-file", BACKING_FILE_RAW_PATH2,
-              "--size", str(SIZE)])
+        f"{REPLICA_NAME}-backing-raw-2",
+        args=[
+            "replica",
+            tempfile.mkdtemp(),
+            "--backing-file",
+            BACKING_FILE_RAW_PATH2,
+            "--size",
+            str(SIZE),
+        ],
+    )
 
 
 @pytest.fixture
@@ -150,8 +174,9 @@ def grpc_fixed_dir_replica1(request, grpc_replica_client):
     request.addfinalizer(lambda: cleanup_replica_dir(
         FIXED_REPLICA_PATH1))
     return grpc_replica_client(
-        REPLICA_NAME + "-fixed-dir-1",
-        args=["replica", FIXED_REPLICA_PATH1, "--size", str(SIZE)])
+        f"{REPLICA_NAME}-fixed-dir-1",
+        args=["replica", FIXED_REPLICA_PATH1, "--size", str(SIZE)],
+    )
 
 
 @pytest.fixture
@@ -159,8 +184,9 @@ def grpc_fixed_dir_replica2(request, grpc_replica_client):
     request.addfinalizer(lambda: cleanup_replica_dir(
         FIXED_REPLICA_PATH2))
     return grpc_replica_client(
-        REPLICA_NAME + "-fixed-dir-2",
-        args=["replica", FIXED_REPLICA_PATH2, "--size", str(SIZE)])
+        f"{REPLICA_NAME}-fixed-dir-2",
+        args=["replica", FIXED_REPLICA_PATH2, "--size", str(SIZE)],
+    )
 
 
 @pytest.fixture
@@ -168,8 +194,9 @@ def grpc_extra_replica1(request, grpc_replica_client):
     request.addfinalizer(lambda: cleanup_replica_dir(
         FIXED_REPLICA_PATH1))
     return grpc_replica_client(
-        REPLICA_NAME + "-extra-1",
-        args=["replica", FIXED_REPLICA_PATH1, "--size", str(SIZE)])
+        f"{REPLICA_NAME}-extra-1",
+        args=["replica", FIXED_REPLICA_PATH1, "--size", str(SIZE)],
+    )
 
 
 @pytest.fixture
@@ -177,8 +204,9 @@ def grpc_extra_replica2(request, grpc_replica_client):
     request.addfinalizer(lambda: cleanup_replica_dir(
         FIXED_REPLICA_PATH2))
     return grpc_replica_client(
-        REPLICA_NAME + "-extra-2",
-        args=["replica", FIXED_REPLICA_PATH2, "--size", str(SIZE)])
+        f"{REPLICA_NAME}-extra-2",
+        args=["replica", FIXED_REPLICA_PATH2, "--size", str(SIZE)],
+    )
 
 
 @pytest.fixture
@@ -239,8 +267,8 @@ def backup_targets():
 
 @pytest.fixture
 def dev(request, grpc_replica_client, grpc_controller_client):
-    grpc_replica1 = grpc_replica_client(REPLICA_NAME + "-1")
-    grpc_replica2 = grpc_replica_client(REPLICA_NAME + "-2")
+    grpc_replica1 = grpc_replica_client(f"{REPLICA_NAME}-1")
+    grpc_replica2 = grpc_replica_client(f"{REPLICA_NAME}-2")
     grpc_controller = grpc_controller_client(ENGINE_NAME, VOLUME_NAME)
 
     return get_dev(grpc_replica1, grpc_replica2, grpc_controller)

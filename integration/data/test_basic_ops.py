@@ -34,7 +34,7 @@ def test_device_creation(first_available_device,
 
 
 def test_basic_rw(dev):  # NOQA
-    for i in range(0, 10):
+    for _ in range(10):
         base = random.randint(1, SIZE - PAGE_SIZE)
         offset = (base // PAGE_SIZE) * PAGE_SIZE
         length = base - offset
@@ -50,7 +50,7 @@ def test_rw_with_metric(grpc_controller,  # NOQA
     # skip the first metric since its fields are 0
     next(replies).metric
 
-    for i in range(0, 5):
+    for _ in range(5):
         base = random.randint(1, SIZE - PAGE_SIZE)
         offset = (base // PAGE_SIZE) * PAGE_SIZE
         length = base - offset
